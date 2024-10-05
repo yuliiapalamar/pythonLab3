@@ -14,6 +14,14 @@ class TramRoutesApp:
     }
 
     def __init__(self, root):
+        """
+        Конструктор класу TramRoutesApp - ініціалізує основне вікно програми.
+        Викликає метод для завантаження трамвайних зупинок.
+
+        Параметри:
+         - root: головне вікно Tkinter
+
+        """
         self.root = root
         self.root.title("TramsRoutes")
         self.root.geometry("650x450")
@@ -57,6 +65,10 @@ class TramRoutesApp:
         exit_button.pack(side=tk.BOTTOM, pady=(0, 30))
 
     def load_tram_stops(self):
+        """
+        Завантажує дані про зупинки трамваїв з файлу TramStops.json.
+
+        """
         with open('TramStops.json', 'r', encoding='utf8') as file:
             self.tram_stops = json.load(file)
             self.all_stops = set()
@@ -66,6 +78,10 @@ class TramRoutesApp:
             self.all_stops = sorted(self.all_stops)
 
     def show_instruction(self):
+        """
+        Відображає інструкції з використання програми в діалоговому вікні.
+
+        """
         instruction_text = (
             "Доступні функції програми:\n"
             " - Пошук трамваїв за зупинкою: дозволяє знайти трамваї, які проходять через зазначену зупинку.\n"
@@ -88,6 +104,10 @@ class TramRoutesApp:
         messagebox.showinfo("Інструкція", instruction_text)
 
     def open_find_trams_at_stop_window(self):
+        """
+        Відкриває вікно для пошуку трамваїв за вказаною зупинкою.
+
+        """
         self.root.withdraw()
         window = tk.Toplevel(self.root)
         window.geometry("650x450")
@@ -105,6 +125,10 @@ class TramRoutesApp:
         result_text.pack(pady=10)
 
         def search_trams():
+            """
+            Викликає метод пошуку трамваїв, що проходять через обрану зупинку.
+
+            """
             stop_name = stop_combobox.get()
             result = self.find_trams_at_stop(stop_name)
             result_text.delete(1.0, tk.END)
@@ -113,13 +137,17 @@ class TramRoutesApp:
         button_frame = tk.Frame(window, bg="#E9DADA")
         button_frame.pack(side=tk.BOTTOM, pady=(0, 30))
 
-        tk.Button(window, text="Шукати", command=search_trams, **self.button_style).pack(pady=20)
+        tk.Button(window, text="Пошук", command=search_trams, **self.button_style).pack(pady=20)
         tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
         tk.Button(button_frame, text="Вийти", command=self.root.quit, **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
 
     def open_calculate_stops_and_transfers_window(self):
+        """
+        Відкриває вікно для обчислення кількості зупинок та пересадок між двома зупинками.
+
+        """
         self.root.withdraw()
         window = tk.Toplevel(self.root)
         window.geometry("650x450")
@@ -143,6 +171,10 @@ class TramRoutesApp:
         result_text.pack(pady=10)
 
         def calculate_stops():
+            """
+            Викликає метод обчислення кількості зупинок та пересадок між двома вказаними зупинками.
+
+            """
             start_stop = start_combobox.get()
             end_stop = end_combobox.get()
             result = self.calculate_stops_and_transfers(start_stop, end_stop)
@@ -152,13 +184,17 @@ class TramRoutesApp:
         button_frame = tk.Frame(window, bg="#E9DADA")
         button_frame.pack(side=tk.BOTTOM, pady=(0, 30))
 
-        tk.Button(window, text="Обчислити", command=calculate_stops, **self.button_style).pack(pady=20)
+        tk.Button(window, text="Пошук", command=calculate_stops, **self.button_style).pack(pady=20)
         tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
         tk.Button(button_frame, text="Вийти", command=self.root.quit, **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
 
     def open_find_trams_through_all_stops_window(self):
+        """
+        Відкриває вікно для пошуку трамваїв через кілька зупинок.
+
+        """
         self.root.withdraw()
         window = tk.Toplevel(self.root)
         window.geometry("650x450")
@@ -176,6 +212,10 @@ class TramRoutesApp:
         result_text.pack(pady=10)
 
         def search_trams():
+            """
+            Викликає метод пошуку трамваїв, що проходять через всі вказані зупинки.
+
+            """
             stop_name = stop_combobox.get()
             result = self.find_trams_through_stops(stop_name)
             result_text.delete(1.0, tk.END)
@@ -184,13 +224,17 @@ class TramRoutesApp:
         button_frame = tk.Frame(window, bg="#E9DADA")
         button_frame.pack(side=tk.BOTTOM, pady=(0, 30))
 
-        tk.Button(window, text="Шукати", command=search_trams, **self.button_style).pack(pady=20)
+        tk.Button(window, text="Пошук", command=search_trams, **self.button_style).pack(pady=20)
         tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
         tk.Button(button_frame, text="Вийти", command=self.root.quit, **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
 
     def open_route_planning_window(self):
+        """
+        Відкриває вікно для планування маршруту між двома зупинками.
+
+        """
         self.root.withdraw()
         window = tk.Toplevel(self.root)
         window.geometry("650x450")
@@ -211,6 +255,10 @@ class TramRoutesApp:
         result_text.pack(pady=10)
 
         def plan_route():
+            """
+            Викликає метод пошуку маршруту між двома вказаними зупинками.
+
+            """
             start_stop = start_combobox.get()
             end_stop = end_combobox.get()
             result = self.plan_route_between_stops(start_stop, end_stop)
@@ -220,17 +268,33 @@ class TramRoutesApp:
         button_frame = tk.Frame(window, bg="#E9DADA")
         button_frame.pack(side=tk.BOTTOM, pady=(0, 30))
 
-        tk.Button(window, text="Скласти", command=plan_route, **self.button_style).pack(pady=20)
+        tk.Button(window, text="Пошук", command=plan_route, **self.button_style).pack(pady=20)
         tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
         tk.Button(button_frame, text="Вийти", command=self.root.quit, **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
 
     def close_window(self, window):
+        """
+        Закриває поточне вікно та відновлює головне вікно.
+
+        Параметри:
+        - window: вікно, яке потрібно закрити
+
+        """
         window.destroy()
         self.root.deiconify()
 
     def find_trams_at_stop(self, stop_name):
+        """
+        Знаходить трамваї, що проходять через вказану зупинку.
+
+        Параметри:
+        - stop_name: назва зупинки для пошуку
+
+        Повертає:
+        - рядок з результатами пошуку
+        """
         trams = []
         for tram, directions in self.tram_stops.items():
             for direction, stops in directions.items():
@@ -241,6 +305,16 @@ class TramRoutesApp:
         return f"Зупинка '{stop_name}' не знайдена в жодному маршруті."
 
     def calculate_stops_and_transfers(self, start_stop, end_stop):
+        """
+        Обчислює кількість зупинок та пересадок між двома зупинками.
+
+        Параметри:
+        - start_stop: початкова зупинка
+        - end_stop: кінцева зупинка
+
+        Повертає:
+        - рядок з результатами обчислень
+        """
         if start_stop == end_stop:
             return 'Початкова і кінцева зупинки однакові.'
         queue = collections.deque([(start_stop, 0, None, [])])
@@ -289,6 +363,15 @@ class TramRoutesApp:
         return "Маршруту не існує"
 
     def find_trams_through_all_stops(self, *stops):
+        """
+        Знаходить трамваї, що проходять через всі вказані зупинки.
+
+        Параметри:
+        - stops: список зупинок для пошуку
+
+        Повертає:
+        - рядок з результатами пошуку
+        """
         valid_trams = set(self.tram_stops.keys())
 
         for stop in stops:
@@ -313,6 +396,16 @@ class TramRoutesApp:
         return "Маршрутів, які проходять через всі зупинки, не знайдено."
 
     def find_routes_between_stops(self, start_stop, end_stop):
+        """
+        Планує маршрут між двома вказаними зупинками.
+
+        Параметри:
+        - start_stop: початкова зупинка
+        - end_stop: кінцева зупинка
+
+        Повертає:
+        - рядок з результатами маршруту
+        """
         if start_stop == end_stop:
             return 'Початкова і кінцева зупинки однакові.'
         queue = collections.deque([(start_stop, 0, None, [])])
