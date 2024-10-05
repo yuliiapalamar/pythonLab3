@@ -52,14 +52,6 @@ class TramRoutesApp:
                                **self.button_style)
             button.grid(row=row, column=column, padx=10, pady=10)
 
-        tram_image = Image.open("Tram.png")
-        tram_image = tram_image.resize((150, 150))
-        self.left_tram = ImageTk.PhotoImage(tram_image)
-        self.right_tram = ImageTk.PhotoImage(ImageOps.mirror(tram_image))
-
-        tk.Label(self.root, image=self.left_tram, bg="#E9DADA").place(relx=0.2, rely=0.7, anchor="center")
-        tk.Label(self.root, image=self.right_tram, bg="#E9DADA").place(relx=0.8, rely=0.7, anchor="center")
-
         exit_button = tk.Button(self.root, text="Вийти", command=self.root.quit,
                                 **self.button_style)
         exit_button.pack(side=tk.BOTTOM, pady=(0, 30))
@@ -74,7 +66,26 @@ class TramRoutesApp:
             self.all_stops = sorted(self.all_stops)
 
     def show_instruction(self):
-        messagebox.showinfo("Інструкція", "Оберіть потрібний функціонал і натисніть відповідну кнопку.")
+        instruction_text = (
+            "Доступні функції програми:\n"
+            " - Пошук трамваїв за зупинкою: дозволяє знайти трамваї, які проходять через зазначену зупинку.\n"
+            " - Кількість зупинок і пересадок: надає інформацію про кількість зупинок та необхідних пересадок для обраного маршруту.\n"
+            " - Трамваї через кілька зупинок: дозволяє знайти трамваї, які зупиняються на кількох вказаних зупинках.\n"
+            " - Скласти маршрут: допомагає побудувати маршрут з початкової до кінцевої зупинки.\n\n"
+            "Як користуватися програмою:\n"
+            "1. Для початку роботи потрібно запустити файл main.py.\n"
+            "2. Після запуску програми з'явиться вікно з заголовком TramsRoutes.\n"
+            "3. Оберіть необхідний функціонал, натиснувши на відповідну кнопку:\n"
+            "    - Пошук трамваїв за зупинкою\n"
+            "    - Кількість зупинок і пересадок\n"
+            "    - Трамваї через кілька зупинок\n"
+            "    - Скласти маршрут\n"
+            "4. У відповідному полі введіть назви зупинок, з якими хочете працювати.\n"
+            "5. Натисніть кнопку Пошук, щоб отримати результати.\n"
+            "6. Щоб повернутися на головне вікно натисніть кнопку Назад.\n"
+            "7. Для виходу з програми натисніть кнопку Вийти."
+        )
+        messagebox.showinfo("Інструкція", instruction_text)
 
     def open_find_trams_at_stop_window(self):
         self.root.withdraw()
