@@ -6,6 +6,169 @@ from tkinter import messagebox
 from PIL import Image, ImageTk, ImageOps
 
 
+def find_trams_at_stop(stop_name, tram_routes):
+    """
+    Знаходить трамваї, що проходять через вказану зупинку.
+
+    Параметри:
+    - stop_name: назва зупинки для пошуку
+
+    Повертає:
+    - рядок з результатами пошуку
+    """
+    trams = []
+    for tram, directions in tram_routes.items():
+        for direction, stops in directions.items():
+            if stop_name in stops:
+                trams.append(tram)
+    if trams:
+        return f"Трамваї, які проходять через зупинку '{stop_name}': {', '.join(sorted(list(set(trams))))}"
+    return f"Зупинка '{stop_name}' не знайдена в жодному маршруті."
+
+
+def calculate_stops_and_transfers(start_stop, end_stop, tram_routes):
+    """
+    Обчислює кількість зупинок та пересадок між двома зупинками.
+
+    Параметри:
+    - start_stop: початкова зупинка
+    - end_stop: кінцева зупинка
+
+    Повертає:
+    - рядок з результатами обчислень
+    """
+    if start_stop == end_stop:
+        return 'Початкова і кінцева зупинки однакові.'
+    queue = collections.deque([(start_stop, 0, None, [])])
+    visited = set()
+
+    while queue:
+        current_stop, transfers, current_tram, path = queue.popleft()
+
+        if current_stop == end_stop:
+            total_transfers = transfers - 1
+            total_stops = 0
+            current_stop_index = tram_routes[path[0].split(',')[0]][path[0].split(',')[1]].index(start_stop)
+            for item in path:
+                tram_number = item.split(',')[0]
+                direction = item.split(',')[1]
+                next_stop = item.split(',')[2]
+                total_stops += tram_routes[tram_number][direction].index(next_stop) - current_stop_index
+                current_stop_index = tram_routes[tram_number][direction].index(next_stop)
+            return f"Кількість зупинок: {total_stops}, кількість пересадок: {total_transfers}"
+
+        if current_stop in visited:
+            continue
+        visited.add(current_stop)
+
+        for tram, directions in tram_routes.items():
+            for direction, stops in directions.items():
+                if current_stop in stops:
+                    stop_index = stops.index(current_stop)
+
+                    for i in range(stop_index + 1, len(stops)):
+                        next_stop = stops[i]
+                        new_transfers = transfers if current_tram == tram else transfers + 1
+                        queue.append(
+                            (next_stop, new_transfers, tram, path +
+                             [
+                                 f'{tram},{direction},{next_stop}']))
+
+                    for i in range(stop_index - 1, -1, -1):
+                        next_stop = stops[i]
+                        new_transfers = transfers if current_tram == tram else transfers + 1
+                        queue.append(
+                            (next_stop, new_transfers, tram, path +
+                             [
+                                 f'{tram},{direction},{next_stop}']))
+
+    return "Маршруту не існує"
+
+
+def find_trams_through_all_stops(*stops, tram_routes):
+    """
+    Знаходить трамваї, що проходять через всі вказані зупинки.
+
+    Параметри:
+    - stops: список зупинок для пошуку
+
+    Повертає:
+    - рядок з результатами пошуку
+    """
+    valid_trams = set(tram_routes.keys())
+
+    for stop in stops:
+        trams_at_stop = set()
+        found = False
+        for tram, directions in tram_routes.items():
+            for direction, stops_list in directions.items():
+                if stop in stops_list:
+                    trams_at_stop.add(tram)
+                    found = True
+
+        if not found:
+            return f"Зупинку '{stop}' не знайдено в жодному маршруті."
+
+        valid_trams &= trams_at_stop
+
+        if not valid_trams:
+            return "Жоден маршрут не проходить через всі зазначені зупинки."
+
+    if valid_trams:
+        return f"Трамваї, які проходять через всі зупинки {', '.join(stops)}: {', '.join(valid_trams)}"
+    return "Маршрутів, які проходять через всі зупинки, не знайдено."
+
+
+def find_routes_between_stops(start_stop, end_stop, tram_routes):
+    """
+    Планує маршрут між двома вказаними зупинками.
+
+    Параметри:
+    - start_stop: початкова зупинка
+    - end_stop: кінцева зупинка
+
+    Повертає:
+    - рядок з результатами маршруту
+    """
+    if start_stop == end_stop:
+        return 'Початкова і кінцева зупинки однакові.'
+    queue = collections.deque([(start_stop, 0, None, [])])
+    visited = set()
+
+    while queue:
+        current_stop, transfers, current_tram, path = queue.popleft()
+
+        if current_stop == end_stop:
+            return f"Потрібний шлях:\n{' '.join(path)}\nПотрібна кількість пересадок: {transfers - 1}"
+
+        if current_stop in visited:
+            continue
+        visited.add(current_stop)
+
+        for tram, directions in tram_routes.items():
+            for direction, stops in directions.items():
+                if current_stop in stops:
+                    stop_index = stops.index(current_stop)
+
+                    for i in range(stop_index + 1, len(stops)):
+                        next_stop = stops[i]
+                        new_transfers = transfers if current_tram == tram else transfers + 1
+                        queue.append(
+                            (next_stop, new_transfers, tram, path +
+                             [
+                                 f'Сісти на трамвай номер {tram} який прямує до кінцевої зупинки "{stops[-1]}" та вийти на зупинці "{next_stop}"']))
+
+                    for i in range(stop_index - 1, -1, -1):
+                        next_stop = stops[i]
+                        new_transfers = transfers if current_tram == tram else transfers + 1
+                        queue.append(
+                            (next_stop, new_transfers, tram, path +
+                             [
+                                 f'Сісти на трамвай номер {tram} який прямує до кінцевої зупинки "{stops[-1]}" та вийти на зупинці "{next_stop}"']))
+
+    return "Маршруту не існує"
+
+
 class TramRoutesApp:
     button_style = {
         "bg": "#D49FB6",
@@ -130,7 +293,7 @@ class TramRoutesApp:
 
             """
             stop_name = stop_combobox.get()
-            result = self.find_trams_at_stop(stop_name)
+            result = find_trams_at_stop(stop_name, self.tram_stops)
             result_text.delete(1.0, tk.END)
             result_text.insert(tk.END, result)
 
@@ -177,7 +340,7 @@ class TramRoutesApp:
             """
             start_stop = start_combobox.get()
             end_stop = end_combobox.get()
-            result = self.calculate_stops_and_transfers(start_stop, end_stop)
+            result = calculate_stops_and_transfers(start_stop, end_stop, self.tram_stops)
             result_text.delete(1.0, tk.END)
             result_text.insert(tk.END, result)
 
@@ -193,7 +356,6 @@ class TramRoutesApp:
     def open_find_trams_through_all_stops_window(self):
         """
         Відкриває вікно для пошуку трамваїв через кілька зупинок.
-
         """
         self.root.withdraw()
         window = tk.Toplevel(self.root)
@@ -203,10 +365,12 @@ class TramRoutesApp:
 
         tk.Label(window, text="Трамваї через кілька зупинок", font=("Helvetica", 16), bg="#E9DADA").pack(pady=10)
 
-        tk.Label(window, text="Оберіть зупинку:", bg="#E9DADA", font=("Helvetica", 12)).pack(pady=10)
+        tk.Label(window, text="Оберіть зупинки:", bg="#E9DADA", font=("Helvetica", 12)).pack(pady=10)
 
-        stop_combobox = ttk.Combobox(window, values=self.all_stops)
-        stop_combobox.pack(pady=10)
+        stop_listbox = tk.Listbox(window, selectmode=tk.MULTIPLE, height=5, bg="#E9DADA", font=("Helvetica", 12))
+        for stop in self.all_stops:
+            stop_listbox.insert(tk.END, stop)
+        stop_listbox.pack(pady=10)
 
         result_text = tk.Text(window, height=5, width=60, bg="#E9DADA", font=("Helvetica", 12))
         result_text.pack(pady=10)
@@ -214,10 +378,16 @@ class TramRoutesApp:
         def search_trams():
             """
             Викликає метод пошуку трамваїв, що проходять через всі вказані зупинки.
-
             """
-            stop_name = stop_combobox.get()
-            result = self.find_trams_through_stops(stop_name)
+            selected_indices = stop_listbox.curselection()
+            selected_stops = [stop_listbox.get(i) for i in selected_indices]
+
+            if not selected_stops:
+                result_text.delete(1.0, tk.END)
+                result_text.insert(tk.END, "Будь ласка, оберіть хоча б одну зупинку.")
+                return
+
+            result = find_trams_through_all_stops(*selected_stops[:-1], tram_routes=self.tram_stops)
             result_text.delete(1.0, tk.END)
             result_text.insert(tk.END, result)
 
@@ -225,8 +395,8 @@ class TramRoutesApp:
         button_frame.pack(side=tk.BOTTOM, pady=(0, 30))
 
         tk.Button(window, text="Пошук", command=search_trams, **self.button_style).pack(pady=20)
-        tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(side=tk.LEFT,
-                                                                                                padx=(10, 0))
+        tk.Button(button_frame, text="Назад", command=lambda: self.close_window(window), **self.button_style).pack(
+            side=tk.LEFT, padx=(10, 0))
         tk.Button(button_frame, text="Вийти", command=self.root.quit, **self.button_style).pack(side=tk.LEFT,
                                                                                                 padx=(10, 0))
 
@@ -261,7 +431,7 @@ class TramRoutesApp:
             """
             start_stop = start_combobox.get()
             end_stop = end_combobox.get()
-            result = self.plan_route_between_stops(start_stop, end_stop)
+            result = find_routes_between_stops(start_stop, end_stop, self.tram_stops)
             result_text.delete(1.0, tk.END)
             result_text.insert(tk.END, result)
 
@@ -284,165 +454,6 @@ class TramRoutesApp:
         """
         window.destroy()
         self.root.deiconify()
-
-    def find_trams_at_stop(self, stop_name):
-        """
-        Знаходить трамваї, що проходять через вказану зупинку.
-
-        Параметри:
-        - stop_name: назва зупинки для пошуку
-
-        Повертає:
-        - рядок з результатами пошуку
-        """
-        trams = []
-        for tram, directions in self.tram_stops.items():
-            for direction, stops in directions.items():
-                if stop_name in stops:
-                    trams.append(tram)
-        if trams:
-            return f"Трамваї, які проходять через зупинку '{stop_name}': {', '.join(sorted(list(set(trams))))}"
-        return f"Зупинка '{stop_name}' не знайдена в жодному маршруті."
-
-    def calculate_stops_and_transfers(self, start_stop, end_stop):
-        """
-        Обчислює кількість зупинок та пересадок між двома зупинками.
-
-        Параметри:
-        - start_stop: початкова зупинка
-        - end_stop: кінцева зупинка
-
-        Повертає:
-        - рядок з результатами обчислень
-        """
-        if start_stop == end_stop:
-            return 'Початкова і кінцева зупинки однакові.'
-        queue = collections.deque([(start_stop, 0, None, [])])
-        visited = set()
-
-        while queue:
-            current_stop, transfers, current_tram, path = queue.popleft()
-
-            if current_stop == end_stop:
-                total_transfers = transfers - 1
-                total_stops = 0
-                current_stop_index = self.tram_stops[path[0].split(',')[0]][path[0].split(',')[1]].index(start_stop)
-                for item in path:
-                    tram_number = item.split(',')[0]
-                    direction = item.split(',')[1]
-                    next_stop = item.split(',')[2]
-                    total_stops += self.tram_stops[tram_number][direction].index(next_stop) - current_stop_index
-                    current_stop_index = self.tram_stops[tram_number][direction].index(next_stop)
-                return f"Кількість зупинок: {total_stops}, кількість пересадок: {total_transfers}"
-
-            if current_stop in visited:
-                continue
-            visited.add(current_stop)
-
-            for tram, directions in self.tram_stops.items():
-                for direction, stops in directions.items():
-                    if current_stop in stops:
-                        stop_index = stops.index(current_stop)
-
-                        for i in range(stop_index + 1, len(stops)):
-                            next_stop = stops[i]
-                            new_transfers = transfers if current_tram == tram else transfers + 1
-                            queue.append(
-                                (next_stop, new_transfers, tram, path +
-                                 [
-                                     f'{tram},{direction},{next_stop}']))
-
-                        for i in range(stop_index - 1, -1, -1):
-                            next_stop = stops[i]
-                            new_transfers = transfers if current_tram == tram else transfers + 1
-                            queue.append(
-                                (next_stop, new_transfers, tram, path +
-                                 [
-                                     f'{tram},{direction},{next_stop}']))
-
-        return "Маршруту не існує"
-
-    def find_trams_through_all_stops(self, *stops):
-        """
-        Знаходить трамваї, що проходять через всі вказані зупинки.
-
-        Параметри:
-        - stops: список зупинок для пошуку
-
-        Повертає:
-        - рядок з результатами пошуку
-        """
-        valid_trams = set(self.tram_stops.keys())
-
-        for stop in stops:
-            trams_at_stop = set()
-            found = False
-            for tram, directions in self.tram_stops.items():
-                for direction, stops_list in directions.items():
-                    if stop in stops_list:
-                        trams_at_stop.add(tram)
-                        found = True
-
-            if not found:
-                return f"Зупинку '{stop}' не знайдено в жодному маршруті."
-
-            valid_trams &= trams_at_stop
-
-            if not valid_trams:
-                return "Жоден маршрут не проходить через всі зазначені зупинки."
-
-        if valid_trams:
-            return f"Трамваї, які проходять через всі зупинки {', '.join(stops)}: {', '.join(valid_trams)}"
-        return "Маршрутів, які проходять через всі зупинки, не знайдено."
-
-    def find_routes_between_stops(self, start_stop, end_stop):
-        """
-        Планує маршрут між двома вказаними зупинками.
-
-        Параметри:
-        - start_stop: початкова зупинка
-        - end_stop: кінцева зупинка
-
-        Повертає:
-        - рядок з результатами маршруту
-        """
-        if start_stop == end_stop:
-            return 'Початкова і кінцева зупинки однакові.'
-        queue = collections.deque([(start_stop, 0, None, [])])
-        visited = set()
-
-        while queue:
-            current_stop, transfers, current_tram, path = queue.popleft()
-
-            if current_stop == end_stop:
-                return f"Потрібний шлях:\n{' '.join(path)}\nПотрібна кількість пересадок: {transfers - 1}"
-
-            if current_stop in visited:
-                continue
-            visited.add(current_stop)
-
-            for tram, directions in self.tram_stops.items():
-                for direction, stops in directions.items():
-                    if current_stop in stops:
-                        stop_index = stops.index(current_stop)
-
-                        for i in range(stop_index + 1, len(stops)):
-                            next_stop = stops[i]
-                            new_transfers = transfers if current_tram == tram else transfers + 1
-                            queue.append(
-                                (next_stop, new_transfers, tram, path +
-                                 [
-                                     f'Сісти на трамвай номер {tram} який прямує до кінцевої зупинки "{stops[-1]}" та вийти на зупинці "{next_stop}"']))
-
-                        for i in range(stop_index - 1, -1, -1):
-                            next_stop = stops[i]
-                            new_transfers = transfers if current_tram == tram else transfers + 1
-                            queue.append(
-                                (next_stop, new_transfers, tram, path +
-                                 [
-                                     f'Сісти на трамвай номер {tram} який прямує до кінцевої зупинки "{stops[-1]}" та вийти на зупинці "{next_stop}"']))
-
-        return "Маршруту не існує"
 
 
 if __name__ == "__main__":
